@@ -1,0 +1,80 @@
+pipeline {
+    agent any
+
+    environment {
+        legume_violet = "eggplant"
+    }
+
+    stages {
+        stage('Hello') {
+            steps {
+                echo 'Hello World'
+            }
+        }
+        stage('testVar') {
+            steps {
+                echo "Le legume de choix est ${legume_violet}"
+
+                script {
+                    def myVar = 2
+                    echo "${myVar}"
+                }
+            }
+        } 
+
+        stage("approbation"){
+            steps {
+                input message: 'continuer?', ok: 'oui'
+            }
+        }
+
+        stage("parallel_test") {
+
+            parallel {
+                stage("trycatch") {
+                    steps {
+                         script {
+                              try {
+                                 def response = httpRequest 'https://httpbin.org/get'
+                                  echo "HTTP Response: ${response.content}"
+                             } catch (Exception e) {
+                                  echo "Error occurred: ${e.message}"
+                                  error e.message
+                            }
+
+                        }
+                    }
+                }
+
+                stage("en meme temps"){
+                    steps {
+                        echo "abcd"
+                        sleep 5
+                        echo "en meme temps terminé"
+                    }
+                }
+
+                stage ("aussi") {
+                    steps {
+                        script {
+                            def calc = 14 + 62000
+                            echo "resultat : ${calc}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post { 
+        success {
+            echo "it worked"
+        }
+        failure {
+            echo "didn't work"
+        }
+        always {
+            echo "happens always"
+        }
+    }
+}
